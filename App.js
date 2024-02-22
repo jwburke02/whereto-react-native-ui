@@ -1,9 +1,14 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TextInput, Button, Pressable } from 'react-native';
+import axios from 'axios';
 
-function findParking(address, radius) {
+async function findParking(address, radius, setIsLoading) {
   console.log(`Attempting to find parking at address "${address}" with a radius of ${radius}...`)
+  // result = await axios.get(`http://10.0.0.249:5001/park/query_with_location_and_radius?address=${address}&radius=${radius}`)
+  result = await axios.get('http://10.0.0.249:5001/park/query_mock_response')
+  console.log(JSON.stringify(result.data, null, 4));
+  setIsLoading(false)
 }
 
 function useCurrentLocation() {
@@ -17,6 +22,7 @@ function useMapPin() {
 export default function App() {
   const [address, setAddress] = React.useState("")
   const [radius, setRadius] = React.useState(0)
+  const [isLoading, setIsLoading] = React.useState(false)
 
   const [isOnMap, setIsOnMap] = React.useState(false)
 
@@ -24,17 +30,26 @@ export default function App() {
     !isOnMap ? 
     <View style={styles.container}>
       <Text style={styles.title}>WhereTo</Text>
-      <TextInput onChangeText={setAddress} style={styles.input} placeholder='Address' />
-      <TextInput onChangeText={setRadius} style={styles.input} keyboardType='numeric' placeholder='Radius' />
-      <View style={styles.input_row} >
-        <Pressable onPress={()=>useCurrentLocation()} style={styles.press}>
-          <Text style={styles.press_text}>Use Current Location</Text>
-        </Pressable>
-        <Pressable onPress={()=>useMapPin()} style={styles.press}>
-          <Text style={styles.press_text}>Pin a Location</Text>
-        </Pressable>
-      </View>
-      <Button onPress={()=>{setIsOnMap(true); findParking(address, radius)}} title='Find Parking' color='#000065'/>
+      {
+        !isLoading ?
+        <>
+          <TextInput onChangeText={setAddress} style={styles.input} placeholder='Address' />
+          <TextInput onChangeText={setRadius} style={styles.input} keyboardType='numeric' placeholder='Radius' />
+          <View style={styles.input_row} >
+            <Pressable onPress={()=>useCurrentLocation()} style={styles.press}>
+              <Text style={styles.press_text}>Use Current Location</Text>
+            </Pressable>
+            <Pressable onPress={()=>useMapPin()} style={styles.press}>
+              <Text style={styles.press_text}>Pin a Location</Text>
+            </Pressable>
+          </View>
+          <Button onPress={()=>{setIsLoading(true); findParking(address, radius, setIsLoading)}} title='Find Parking' color='#000065'/>
+        </>
+        :
+        <>
+          <Text>Please wait while your Parking is found...</Text>
+        </>
+      }
       <StatusBar style="auto" />
     </View> 
     : 
