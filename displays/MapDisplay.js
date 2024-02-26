@@ -15,14 +15,14 @@ function Markers({responseData}) {
             }
         }
     }
-    console.log(marker_params)
-    return marker_params.map((params) => {
+    return marker_params.map((params, i) => {
         return(<Marker
             coordinate={{latitude: params.lat,
             longitude: params.lng}}
             title={params.class_name}
             description={params.class_name}
             color={"blue"}
+            key={i}
          />)
     })
 }
@@ -53,7 +53,7 @@ function MapDisplay({responseData, setIsOnMap}) {
                 />
                 <Markers responseData={responseData}/>
             </MapView>
-            <Button onPress={()=>{setIsOnMap(false)}} title='Back to Menu' color='#000065'/>
+            <Button onPress={()=>{setIsOnMap(false)}} title='Back to Menu' color='#EFEFEF'/>
         </View>
     )
 }
