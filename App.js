@@ -1,61 +1,65 @@
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Button, Pressable } from 'react-native';
+import { StyleSheet, View, Text, TextInput, Button, Pressable, ActivityIndicator } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import axios from 'axios';
+// Assuming temp.json is in your project's root
+import result from './temp.json';
 
-async function findParking(address, radius, setIsLoading) {
-  console.log(`Attempting to find parking at address "${address}" with a radius of ${radius}...`)
-  // result = await axios.get(`http://10.0.0.249:5001/park/query_with_location_and_radius?address=${address}&radius=${radius}`)
-  result = await axios.get('http://10.0.0.249:5001/park/query_mock_response')
-  console.log(JSON.stringify(result.data, null, 4));
-  setIsLoading(false)
+async function findParking(address, radius, setIsLoading, setMarkers) {
+  console.log(`Attempting to find parking at address "${address}" with a radius of ${radius}...`);
+  setIsLoading(true);
+  // Simulate fetching data. Replace with your actual API call
+  // const result = await axios.get(`http://your-api-endpoint/park/query?address=${address}&radius=${radius}`);
+  console.log(JSON.stringify(result, null, 4));
+  // Assuming result.data contains an array of parking spots, each with latitude and longitude
+  setMarkers(result.data.map(spot => ({ latitude: spot.lat, longitude: spot.lon })));
+  setIsLoading(false);
 }
 
-function useCurrentLocation() {
-  console.log("Attempting to use current location as input...")
-}
-
-function useMapPin() {
-  console.log("Attempting to place a pin on the map for input...")
-}
-
-export default function App() {
-  const [address, setAddress] = React.useState("")
-  const [radius, setRadius] = React.useState(0)
-  const [isLoading, setIsLoading] = React.useState(false)
-
-  const [isOnMap, setIsOnMap] = React.useState(false)
+function App() {
+  const [address, setAddress] = React.useState('');
+  const [radius, setRadius] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isOnMap, setIsOnMap] = React.useState(false);
+  const [markers, setMarkers] = React.useState([]);
 
   return (
-    !isOnMap ? 
     <View style={styles.container}>
-      <Text style={styles.title}>WhereTo</Text>
-      {
-        !isLoading ?
+      {!isOnMap ? (
         <>
-          <TextInput onChangeText={setAddress} style={styles.input} placeholder='Address' />
-          <TextInput onChangeText={setRadius} style={styles.input} keyboardType='numeric' placeholder='Radius' />
-          <View style={styles.input_row} >
-            <Pressable onPress={()=>useCurrentLocation()} style={styles.press}>
-              <Text style={styles.press_text}>Use Current Location</Text>
-            </Pressable>
-            <Pressable onPress={()=>useMapPin()} style={styles.press}>
-              <Text style={styles.press_text}>Pin a Location</Text>
-            </Pressable>
-          </View>
-          <Button onPress={()=>{setIsLoading(true); findParking(address, radius, setIsLoading)}} title='Find Parking' color='#000065'/>
+          <Text style={styles.title}>WhereTo</Text>
+          {!isLoading ? (
+            <>
+              <TextInput onChangeText={setAddress} style={styles.input} placeholder='Address' />
+              <TextInput onChangeText={(text) => setRadius(text)} style={styles.input} keyboardType='numeric' placeholder='Radius' />
+              <Button onPress={() => {findParking(address, radius, setIsLoading, setMarkers); setIsOnMap(true);}} title='Find Parking' color='#000065' />
+              <Pressable onPress={() => setIsOnMap(true)} style={styles.press}>
+                <Text style={styles.press_text}>View Map</Text>
+              </Pressable>
+            </>
+          ) : (
+            <ActivityIndicator size="large" color="#0000ff" />
+          )}
         </>
-        :
+      ) : (
         <>
-          <Text>Please wait while your Parking is found...</Text>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: 37.78825,
+              longitude: -122.4324,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}>
+            {markers.map((marker, index) => (
+              <Marker key={index} coordinate={marker} />
+            ))}
+          </MapView>
+          <Pressable onPress={() => setIsOnMap(false)} style={styles.press}>
+            <Text style={styles.press_text}>Back to Search</Text>
+          </Pressable>
         </>
-      }
-      <StatusBar style="auto" />
-    </View> 
-    : 
-    <View style={styles.container}>
-      <Text style={styles.title}>WhereTo</Text>
-      <StatusBar style="auto" />
+      )}
     </View>
   );
 }
@@ -68,41 +72,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 64,
-    color: '#000065'
-  },
-  input_row: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 32,
+    marginBottom: 20,
   },
   input: {
-    width: 312,
-    height: 32,
-    marginTop: 8,
-    borderStyle: "solid",
-    borderWidth: 2,
-    borderColor: '#898989',
-    borderRadius: 5,
-    backgroundColor: "#EFEFEF",
-    paddingLeft: 4,
+    width: 300,
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
   },
   press: {
     marginTop: 16,
-    marginLeft: 4,
-    marginBottom: 32,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#0000FF',
-    padding: 4,
+    padding: 10,
     borderRadius: 4,
-    borderColor: '#0000AB',
-    borderWidth: 2,
   },
   press_text: {
     color: '#FFFFFF',
-    fontSize: 14
-  }
+  },
+  map: {
+    width: '100%',
+    height: '80%',
+  },
 });
+
+export default App;
