@@ -1,7 +1,6 @@
 import React from 'react';
 import InputDisplay from './displays/InputDisplay';
 import MapDisplay from './displays/MapDisplay';
-import { StyleSheet } from 'react-native';
 
 export default function App() {
   // State Variables for controlling current display
