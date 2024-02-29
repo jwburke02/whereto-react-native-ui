@@ -20,7 +20,7 @@ function Markers({responseData}) {
             coordinate={{latitude: params.lat,
             longitude: params.lng}}
             title={params.class_name}
-            description={params.class_name}
+            description={params.conf.toString().substring(0, 4)}
             color={"blue"}
             key={i}
          />)
