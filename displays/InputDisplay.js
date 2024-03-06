@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, TextInput, Text, Pressable, Button, StatusBar, StyleSheet } from 'react-native'
 import axios from 'axios'
+import mock_response from '../response.json'
 
 // not current active, console log example
 function useCurrentLocation() {
@@ -23,9 +24,9 @@ async function findParking(address, radius, setIsLoading, setIsOnMap, setRespons
             "address": address,
             "radius": radius
         }
-        result = await axios.post('http://10.0.0.249:7001/park', params)
-        console.log(JSON.stringify(result.data, null, 4));
-        setResponseData(result.data)
+        result = mock_response// await axios.post('http://192.168.1.45:7001/park', params)
+        console.log(JSON.stringify(result, null, 4));
+        setResponseData(result)
         setIsLoading(false) // end loading 
         setIsOnMap(true) // display map results 
     }
