@@ -14,7 +14,10 @@
     "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
     "react-native": "0.73.4",
-    "react-native-maps": "1.10.0"
+    "react-native-base64": "^0.2.1",
+    "react-native-fs": "^2.20.0",
+    "react-native-maps": "1.10.0",
+    "expo-file-system": "~16.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
