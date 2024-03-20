@@ -1,17 +1,7 @@
 import React from 'react';
 import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator } from 'react-native';
 import mock_response from '../response.json'; // Assuming the mock_response is still used for demonstration
-
-// not current active, console log example. 
-//useCurrentlocation work on this 
-function useCurrentLocation() {
-  console.log('Using current location...');
-}
-
-// not current active, console log example
-function useMapPin() {
-  console.log('Placing a pin on the map...');
-}
+import axios from 'axios';
 
 // API call to find the parking
 async function findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError) {
@@ -20,8 +10,13 @@ async function findParking(address, radius, setIsLoading, setIsOnMap, setRespons
   try {
     console.log(`Finding parking near "${address}" within radius of ${radius} meters.`);
     // Simulate API call
-    const result = mock_response; // await axios.post('http://192.168.1.45:7001/park', params)
-    setResponseData(result);
+    const params = {
+      "address": address,
+      "radius": parseInt(radius) * 0.000621371 // meter to mile convert
+    }
+    console.log(`Finding parking near "${address}" within radius of ${parseInt(radius) * 0.000621371} miles.`);
+    const result = await axios.post('http://10.239.172.191:7001/park', params)
+    setResponseData(result.data);
     setIsLoading(false);// end loading 
     setIsOnMap(true);// display map results 
   } catch (error) {
@@ -44,7 +39,7 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
   return (
     <ImageBackground source={require('../assets/sample.jpeg')} style={styles.backgroundImage} blurRadius={3}>
       <View style={styles.overlay}>
-        <Text style={styles.title}>Find Parking</Text>
+        <Text style={styles.title}>WhereTo</Text>
         {isLoading ? (
           <ActivityIndicator size="large" color="#4ECCA3" />
         ) : (
@@ -61,7 +56,7 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
               value={radius}
               style={styles.input}
               keyboardType="numeric"
-              placeholder="Radius in meters"
+              placeholder="Radius in meters (25-200)"
               placeholderTextColor="#6c757d"
             />
             <Pressable onPress={() => findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError)} style={styles.button}>
@@ -89,7 +84,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 64,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 20,
