@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Button, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Modal, Button, TouchableOpacity, Image, Dimensions, Pressable } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import axios from 'axios';
 
@@ -12,6 +12,8 @@ const detailedInfo = {
   image_data: null
 };
 
+
+
 // Component for displaying modal with marker's detailed information
 function MarkerInfoModal({ visible, onClose, info }) {
   return (
@@ -23,12 +25,39 @@ function MarkerInfoModal({ visible, onClose, info }) {
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <Image source={{ uri: info.image_data }} style={styles.parkingImage} resizeMode="cover" />
-          <Text style={styles.modalText}>Address: {info.address}</Text>
-          <Text style={styles.modalText}>Detection: {info.class_name}</Text>
-          <Text style={styles.modalText}>Confidence: {info.conf.toFixed(2)}</Text>
+          <Text style={styles.modalText1}>Address: {info.address}</Text>
+          <Text style={styles.modalText1}>Detection: {info.class_name}</Text>
+          <Text style={styles.modalText1}>Confidence: {info.conf.toFixed(2)}</Text>
           <TouchableOpacity style={[styles.button, styles.buttonClose]} onPress={onClose}>
             <Text style={styles.textStyle}>Close</Text>
           </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function HelpModal({ isVisible, onClose }) {
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}>
+      <View style={styles.centeredModalView}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Navigating the Map</Text>
+          <Text style={styles.modalText}>
+            Tap on any parking spot marker to view more details.
+          </Text>
+          <Text style={styles.modalText}>
+            Details include the address, type of parking spot, confidence level, and an image if available.
+          </Text>
+          <Pressable
+            style={[styles.button, styles.buttonClose]}
+            onPress={onClose}>
+            <Text style={styles.textStyle}>Close</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -53,6 +82,8 @@ function Markers({ responseData, onSelect }) {
   function MapDisplay({ responseData, setIsOnMap }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedInfo, setSelectedInfo] = useState(detailedInfo);
+    const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false); // State for help modal visibility
+
   
     const handleSelectMarker = async (did, lat, lng) => {
       // use the did to call the detail endpoint
@@ -61,7 +92,7 @@ function Markers({ responseData, onSelect }) {
         "lat": lat,
         "lng": lng
       }
-      result = await axios.post('http://10.239.172.191:7001/detail', params)
+      result = await axios.post('http://192.168.4.97:8000/detail', params)
       let base64Image = 'data:image/jpeg;base64,'
       base64Image = base64Image + result.data.image_data
       result.data.image_data = base64Image
@@ -91,6 +122,17 @@ function Markers({ responseData, onSelect }) {
             <Text style={styles.backButtonText}>Back to Menu</Text>
           </TouchableOpacity>
           <MarkerInfoModal visible={modalVisible} onClose={() => setModalVisible(false)} info={selectedInfo} />
+          {/* Help button */}
+        <Pressable
+          onPress={() => setIsHelpModalVisible(true)}
+          style={styles.helpButton}>
+          <Text style={styles.helpButtonText}>?</Text>
+        </Pressable>
+        {/* Help modal */}
+        <HelpModal
+          isVisible={isHelpModalVisible}
+          onClose={() => setIsHelpModalVisible(false)}
+        />
         </View>
       );
     }
@@ -159,7 +201,52 @@ function Markers({ responseData, onSelect }) {
         fontWeight: "bold",
         textAlign: "center",
       },
+      helpButton: {
+        position: 'absolute',
+        right: 20,
+        top: 50,
+        backgroundColor: '#4ECCA3',
+        borderRadius: 20,
+        padding: 10,
+      },
+      helpButtonText: {
+        fontSize: 24,
+        color: '#FFFFFF',
+      },
+      centeredModalView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      },
+      modalContent: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+      modalTitle: {
+        marginBottom: 15,
+        textAlign: "center",
+        fontSize: 20,
+        fontWeight: 'bold',
+      },
       modalText: {
+        marginBottom: 15,
+        textAlign: "center",
+        fontSize: 16,
+      },
+      modalText1: {
         marginBottom: 15,
         textAlign: "center",
         fontSize: 16,
