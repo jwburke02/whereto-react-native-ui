@@ -92,7 +92,7 @@ function Markers({ responseData, onSelect }) {
         "lat": lat,
         "lng": lng
       }
-      result = await axios.post('http://192.168.4.97:8000/detail', params)
+      result = await axios.post('http://172.20.10.2:8000/detail', params)
       let base64Image = 'data:image/jpeg;base64,'
       base64Image = base64Image + result.data.image_data
       result.data.image_data = base64Image

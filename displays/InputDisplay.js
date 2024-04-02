@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator, Modal } from 'react-native';
+import React, { useState, useRef } from 'react'; // Add useRef
+import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator, Modal,Platform } from 'react-native';
 import mock_response from '../response.json'; // Assuming the mock_response is still used for demonstration
 import axios from 'axios';
 import * as Location from 'expo-location';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 
 
+const GOOGLE_PLACES_API_KEY = 'AIzaSyBg-pe_LHT7KSDfsddZCZcCzKggF8fHV5g';
 
 function HelpModal({ isVisible, onClose }) {
   return (
@@ -37,35 +38,15 @@ function HelpModal({ isVisible, onClose }) {
 
 
 // API call to find the parking
-async function findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError) {
-  // Change display to emphasize loading (this function call can take a long time)
-  setIsLoading(true);
-  try {
-    console.log(`Finding parking near "${address}" within radius of ${radius} meters.`);
-    // Simulate API call
-    const params = {
-      "address": address,
-      "radius": parseInt(radius) * 0.000621371 // meter to mile convert
-    }
-    console.log(`Finding parking near "${address}" within radius of ${parseInt(radius) * 0.000621371} miles.`);
-    const result = await axios.post('http://192.168.4.97:8000/park', params)
-    setResponseData(result.data);
-    setIsLoading(false);// end loading 
-    setIsOnMap(true);// display map results 
-  } catch (error) {
-    console.error(error);
-    setIsLoading(false);
-    setIsError(true);
-    setIsOnMap(false);// if there was an exception we should not display results
-  }
-}
-// Input Display Component 
 function InputDisplay({ setIsOnMap, setResponseData }) {
-  const [address, setAddress] = React.useState('');
   const [radius, setRadius] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false);
+  const [address, setAddress] = useState('');
+
+
+  const googlePlacesAutocompleteRef = useRef(null);
 
   const getCurrentLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -75,15 +56,33 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
     }
 
     let location = await Location.getCurrentPositionAsync({});
-    const { latitude, longitude } = location.coords;
-
-    let reverseGeocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+    let reverseGeocode = await Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude });
     if (reverseGeocode.length > 0) {
       const { street, city, region, postalCode } = reverseGeocode[0];
       const formattedAddress = `${street}, ${city}, ${region} ${postalCode}`;
-      setAddress(formattedAddress);
+      googlePlacesAutocompleteRef.current?.setAddressText(formattedAddress);
     }
   };
+
+  async function findParking(address, radius) {
+    setIsLoading(true);
+    try {
+      const params = {
+        "address": address,
+        "radius": parseInt(radius) * 0.000621371 // meter to mile convert
+      };
+      const result = await axios.post('http://172.20.10.2:8000/park', params);
+      setResponseData(result.data);
+      setIsLoading(false);
+      setIsOnMap(true);
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+      setIsError(true);
+      setIsOnMap(false);
+    }
+  }
+  
 
   return (
     <ImageBackground source={require('../assets/sample.jpeg')} style={styles.backgroundImage} blurRadius={3}>
@@ -93,13 +92,24 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
           <ActivityIndicator size="large" color="#4ECCA3" />
         ) : (
           <>
-            <TextInput
-              onChangeText={setAddress}
-              value={address}
-              style={styles.input}
-              placeholder="Enter Address"
-              placeholderTextColor="#6c757d"
-            />
+            <GooglePlacesAutocomplete
+          placeholder="Enter Address"
+          ref={googlePlacesAutocompleteRef}
+          onPress={(data, details = null) => {
+            // Use this address to find parking when the button is pressed
+            setAddress(data.description);
+          }}
+          query={{
+            key: GOOGLE_PLACES_API_KEY,
+            language: 'en',
+          }}
+          styles={{
+            textInputContainer: styles.googlePlacesInputContainer,
+            textInput: styles.googlePlacesInput,
+            listView: styles.listView
+            
+          }}
+        />
             <TextInput
               onChangeText={text => setRadius(text.replace(/[^0-9]/g, ''))}
               value={radius}
@@ -108,10 +118,10 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
               placeholder="Radius in meters (25-200)"
               placeholderTextColor="#6c757d"
             />
-            <Pressable onPress={getCurrentLocation} style={styles.button}>
+            <Pressable onPress={getCurrentLocation} style={styles.buttonuser1}>
               <Text style={styles.buttonText}>Use Current Location</Text>
             </Pressable>
-            <Pressable onPress={() => findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError)} style={styles.button}>
+            <Pressable onPress={() => findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError)} style={styles.buttonuser2}>
               <Text style={styles.buttonText}>Find Parking</Text>
             </Pressable>
             {isError && <Text style={styles.errorText}>Unable to find parking. Please try again.</Text>}
@@ -143,12 +153,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start', // Ensures content starts from the top
+    paddingTop: 40,
   },
   title: {
     fontSize: 64,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    marginTop:153,
     marginBottom: 20,
   },
   input: {
@@ -158,9 +170,37 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 20,
     fontSize: 16,
+    zIndex: -1000,
     color: '#333333',
-    marginBottom: 10,
+    marginVertical: 10,
     opacity: 0.9,
+  },
+  googlePlacesInputContainer: {
+    width: '90%', // Ensure the container is wide enough
+    backgroundColor: '333333',
+    zIndex: 5,
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+  },
+  googlePlacesInput: {
+    width: '90%',
+    height: 50,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: '#333333',
+    marginVertical: 10,
+    opacity: 0.9,
+  },
+  listView: {
+    position: 'absolute',
+    top:65, // Adjust this value based on your layout
+    width: '90%',
+    borderRadius: 25,
+    zIndex: 1000, // Ensure this is very high to bring in front
+    backgroundColor: 'white',
+    elevation: 3, // For Android to ensure the shadow and elevation
   },
   button: {
     width: '90%',
@@ -169,7 +209,27 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginVertical: 10,
+  },
+  buttonuser1: {
+    width: '90%',
+    backgroundColor: '#4ECCA3',
+    padding: 15,
+    borderRadius: 25,
+    zIndex: -1000, // Ensure this is very high to bring in front
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  buttonuser2: {
+    width: '90%',
+    backgroundColor: '#4ECCA3',
+    padding: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    zIndex: -1000,
+    justifyContent: 'center',
+    marginBottom: 300,
   },
   buttonText: {
     color: '#FFFFFF',
