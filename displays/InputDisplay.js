@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator, Modal } from 'react-native';
 import mock_response from '../response.json'; // Assuming the mock_response is still used for demonstration
 import axios from 'axios';
 import * as Location from 'expo-location';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+
 
 
 function HelpModal({ isVisible, onClose }) {
@@ -63,7 +65,8 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
   const [radius, setRadius] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
-  const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false); // State for help modal visibility
+  const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false);
+
   const getCurrentLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
@@ -128,6 +131,7 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
     </ImageBackground>
   );
 }
+
 
 // Add styles for the help button and modal
 const styles = StyleSheet.create({
