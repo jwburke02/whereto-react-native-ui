@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'; // Add useRef
-import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator, Modal,Platform } from 'react-native';
+import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator, Modal,TouchableWithoutFeedback, Keyboard } from 'react-native';
 import mock_response from '../response.json'; // Assuming the mock_response is still used for demonstration
 import axios from 'axios';
 import * as Location from 'expo-location';
@@ -85,7 +85,9 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
   
 
   return (
+    
     <ImageBackground source={require('../assets/sample.jpeg')} style={styles.backgroundImage} blurRadius={3}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.overlay}>
         <Text style={styles.title}>WhereTo</Text>
         {isLoading ? (
@@ -138,7 +140,9 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
         />
         <StatusBar style="auto" />
       </View>
+      </TouchableWithoutFeedback>
     </ImageBackground>
+    
   );
 }
 
@@ -177,7 +181,7 @@ const styles = StyleSheet.create({
   },
   googlePlacesInputContainer: {
     width: '90%', // Ensure the container is wide enough
-    backgroundColor: '333333',
+    backgroundColor: 'transparent',
     zIndex: 5,
     borderTopWidth: 0,
     borderBottomWidth: 0,
