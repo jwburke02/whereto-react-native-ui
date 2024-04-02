@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TextInput, Text, Pressable, ImageBackground, StatusBar, StyleSheet, ActivityIndicator, Modal } from 'react-native';
 import mock_response from '../response.json'; // Assuming the mock_response is still used for demonstration
 import axios from 'axios';
+import * as Location from 'expo-location';
 
 
 function HelpModal({ isVisible, onClose }) {
@@ -17,7 +18,7 @@ function HelpModal({ isVisible, onClose }) {
           <Text style={styles.modalText}>
             Enter an address and a radius to find parking spots near you.
           </Text>
-          <Text style={styles.modalExample}>Example: 700 Commonwealth Ave, Boston MA</Text>
+          <Text style={styles.modalExample}>Example: 700 Commonwealth Ave, Boston, MA 02215</Text>
           <Text style={styles.modalText}>
             Press the "Find Parking" button to view spots on the map.
           </Text>
@@ -63,7 +64,24 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false); // State for help modal visibility
-  
+  const getCurrentLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      console.error('Permission to access location was denied');
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = location.coords;
+
+    let reverseGeocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+    if (reverseGeocode.length > 0) {
+      const { street, city, region, postalCode } = reverseGeocode[0];
+      const formattedAddress = `${street}, ${city}, ${region} ${postalCode}`;
+      setAddress(formattedAddress);
+    }
+  };
+
   return (
     <ImageBackground source={require('../assets/sample.jpeg')} style={styles.backgroundImage} blurRadius={3}>
       <View style={styles.overlay}>
@@ -87,19 +105,20 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
               placeholder="Radius in meters (25-200)"
               placeholderTextColor="#6c757d"
             />
+            <Pressable onPress={getCurrentLocation} style={styles.button}>
+              <Text style={styles.buttonText}>Use Current Location</Text>
+            </Pressable>
             <Pressable onPress={() => findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError)} style={styles.button}>
               <Text style={styles.buttonText}>Find Parking</Text>
             </Pressable>
             {isError && <Text style={styles.errorText}>Unable to find parking. Please try again.</Text>}
           </>
         )}
-        {/* Help button */}
         <Pressable
           onPress={() => setIsHelpModalVisible(true)}
           style={styles.helpButton}>
           <Text style={styles.helpButtonText}>?</Text>
         </Pressable>
-        {/* Help modal */}
         <HelpModal
           isVisible={isHelpModalVisible}
           onClose={() => setIsHelpModalVisible(false)}
