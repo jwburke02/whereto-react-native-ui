@@ -207,14 +207,14 @@ function Markers({ responseData, onSelect }) {
         backgroundColor: '#38a681',
         bottom: 20, // Adjust as necessary
         right: 20, // Adjust as necessary
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        //backgroundColor: 'rgba(0,0,0,0.7)',
         borderRadius: 20,
         padding: 10,
       },
       
       mapTypeButtonText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 18,
       },
       backButton: {
         backgroundColor: "#4ECCA3",
