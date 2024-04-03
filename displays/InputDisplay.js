@@ -71,7 +71,7 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
         "address": address,
         "radius": parseInt(radius) * 0.000621371 // meter to mile convert
       };
-      const result = await axios.post('http://172.20.10.2:8000/park', params);
+      const result = await axios.post('http://192.168.4.97:8000/park', params);
       setResponseData(result.data);
       setIsLoading(false);
       setIsOnMap(true);
@@ -89,7 +89,10 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
     <ImageBackground source={require('../assets/sample.jpeg')} style={styles.backgroundImage} blurRadius={3}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.overlay}>
-        <Text style={styles.title}>WhereTo</Text>
+      <Text style={styles.title}>
+        <Text style={{ color: 'white' }}>Where</Text>
+        <Text style={{ color: '#38a681' }}>To</Text>
+      </Text>
         {isLoading ? (
           <ActivityIndicator size="large" color="#4ECCA3" />
         ) : (
@@ -111,6 +114,9 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
             listView: styles.listView
             
           }}
+          textInputProps={{
+            placeholderTextColor: '#6c757d', // Your desired placeholder text color
+          }}
         />
             <TextInput
               onChangeText={text => setRadius(text.replace(/[^0-9]/g, ''))}
@@ -120,12 +126,13 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
               placeholder="Radius in meters (25-200)"
               placeholderTextColor="#6c757d"
             />
-            <Pressable onPress={getCurrentLocation} style={styles.buttonuser1}>
-              <Text style={styles.buttonText}>Use Current Location</Text>
-            </Pressable>
             <Pressable onPress={() => findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError)} style={styles.buttonuser2}>
-              <Text style={styles.buttonText}>Find Parking</Text>
+              <Text style={styles.buttonText1}>Find Parking</Text>
             </Pressable>
+            <Pressable onPress={getCurrentLocation} style={styles.buttonuser1}>
+              <Text style={styles.buttonText2}>Current Location</Text>
+            </Pressable>
+            
             {isError && <Text style={styles.errorText}>Unable to find parking. Please try again.</Text>}
           </>
         )}
@@ -164,7 +171,7 @@ const styles = StyleSheet.create({
     fontSize: 64,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginTop:153,
+    marginTop:157,
     marginBottom: 20,
   },
   input: {
@@ -215,41 +222,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 10,
   },
-  buttonuser1: {
-    width: '90%',
-    backgroundColor: '#4ECCA3',
+  buttonuser1: {//current location button
+    width: '45%',
+    backgroundColor: '#FFFFFF',
     padding: 15,
     borderRadius: 25,
     zIndex: -1000, // Ensure this is very high to bring in front
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10,
+    marginBottom: 300,
   },
-  buttonuser2: {
-    width: '90%',
-    backgroundColor: '#4ECCA3',
+  buttonuser2: {//find parking button 
+    width: '45%',
+    backgroundColor: '#38a681',
     padding: 15,
     borderRadius: 25,
     alignItems: 'center',
     zIndex: -1000,
     justifyContent: 'center',
-    marginBottom: 300,
+    marginVertical: 10,
   },
-  buttonText: {
+  buttonText1: {
     color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonText2: {
+    color: '#38a681',
     fontSize: 18,
     fontWeight: 'bold',
   },
   errorText: {
     color: '#FF0000',
-    marginTop: 20,
+    marginTop: -38,
+    marginBottom: 20,
+    
   },
   // New styles for help modal and button
   helpButton: {
     position: 'absolute',
     right: 20,
     top: 50,
-    backgroundColor: '#4ECCA3',
+    backgroundColor: '#38a681',
     borderRadius: 20,
     padding: 10,
   },

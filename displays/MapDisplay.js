@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Button, TouchableOpacity, Image, Dimensions, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Modal, Button, TouchableOpacity, Image, Dimensions, Pressable, ImageBackground} from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import axios from 'axios';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,8 +12,6 @@ const detailedInfo = {
   conf: 0.91,
   image_data: null
 };
-
-
 
 // Component for displaying modal with marker's detailed information
 function MarkerInfoModal({ visible, onClose, info }) {
@@ -83,7 +82,7 @@ function Markers({ responseData, onSelect }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedInfo, setSelectedInfo] = useState(detailedInfo);
     const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false); // State for help modal visibility
-
+    const [mapType, setMapType] = useState('standard');
   
     const handleSelectMarker = async (did, lat, lng) => {
       // use the did to call the detail endpoint
@@ -92,7 +91,7 @@ function Markers({ responseData, onSelect }) {
         "lat": lat,
         "lng": lng
       }
-      result = await axios.post('http://172.20.10.2:8000/detail', params)
+      result = await axios.post('http://192.168.4.97:8000/detail', params)
       let base64Image = 'data:image/jpeg;base64,'
       base64Image = base64Image + result.data.image_data
       result.data.image_data = base64Image
@@ -100,14 +99,16 @@ function Markers({ responseData, onSelect }) {
       setModalVisible(true);
     };
     return (
+      <ImageBackground source={require('../assets/sample.jpeg')} style={styles.backgroundImage} blurRadius={3}>
         <View style={styles.container}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: responseData['center_lat'],
-              longitude: responseData['center_lng'],
-              latitudeDelta: 0.0122,
-              longitudeDelta: 0.0042,
+        <MapView
+  style={styles.map}
+  mapType={mapType}
+  initialRegion={{
+    latitude: responseData['center_lat'],
+    longitude: responseData['center_lng'],
+    latitudeDelta: 0.0122,
+    longitudeDelta: 0.0042,
             }}>
             <Circle
               center={{ latitude: responseData['center_lat'], longitude: responseData['center_lng'] }}
@@ -118,9 +119,9 @@ function Markers({ responseData, onSelect }) {
             />
             <Markers responseData={responseData} onSelect={handleSelectMarker} />
           </MapView>
-          <TouchableOpacity style={styles.backButton} onPress={() => setIsOnMap(false)}>
-            <Text style={styles.backButtonText}>Back to Menu</Text>
-          </TouchableOpacity>
+          {/*<TouchableOpacity style={styles.backButton} onPress={() => setIsOnMap(false)}>
+            <Text style={styles.backButtonText}>Back to Home</Text>
+          </TouchableOpacity>*/}
           <MarkerInfoModal visible={modalVisible} onClose={() => setModalVisible(false)} info={selectedInfo} />
           {/* Help button */}
         <Pressable
@@ -128,24 +129,51 @@ function Markers({ responseData, onSelect }) {
           style={styles.helpButton}>
           <Text style={styles.helpButtonText}>?</Text>
         </Pressable>
+        <Pressable
+  style={styles.mapTypeButton}
+  onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}>
+  <Text style={styles.mapTypeButtonText}>
+    {mapType === 'standard' ? 'Satellite View' : 'Standard View'}
+  </Text>
+</Pressable>
         {/* Help modal */}
         <HelpModal
           isVisible={isHelpModalVisible}
           onClose={() => setIsHelpModalVisible(false)}
         />
+        <Pressable onPress={() => setIsOnMap(false)} style={styles.homeButton}>
+          <Icon name="home" size={30} color="#FFFFFF" />
+        </Pressable>
         </View>
+        </ImageBackground>
       );
     }
     
     const styles = StyleSheet.create({
+      backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
       container: {
         flex: 1,
-        backgroundColor: '#fff',
         justifyContent: 'flex-end',
+        
       },
+      homeButton: {
+        position: 'absolute',
+        width: 50,
+        height: 50,
+        top: 50, // Adjust as needed
+        left: 20, // Adjust as needed
+        elevation: 5,
+        backgroundColor: '#38a681',
+        borderRadius: 20,
+        padding: 10,
+    },
       map: {
         width: width,
-        height: height * 0.8,
+        height: height ,
       },
       centeredView: {
         flex: 1,
@@ -174,12 +202,27 @@ function Markers({ responseData, onSelect }) {
         borderRadius: 10,
         marginBottom: 15,
       },
+      mapTypeButton: {
+        position: 'absolute',
+        backgroundColor: '#38a681',
+        bottom: 20, // Adjust as necessary
+        right: 20, // Adjust as necessary
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        borderRadius: 20,
+        padding: 10,
+      },
+      
+      mapTypeButtonText: {
+        color: 'white',
+        fontSize: 16,
+      },
       backButton: {
         backgroundColor: "#4ECCA3",
         paddingVertical: 12,
         paddingHorizontal: 20,
         borderRadius: 25,
-        marginBottom: 30,
+        marginTop: 10,
+        marginBottom: 25,
         alignSelf: 'center',
       },
       backButtonText: {
@@ -205,7 +248,7 @@ function Markers({ responseData, onSelect }) {
         position: 'absolute',
         right: 20,
         top: 50,
-        backgroundColor: '#4ECCA3',
+        backgroundColor: '#38a681',
         borderRadius: 20,
         padding: 10,
       },
