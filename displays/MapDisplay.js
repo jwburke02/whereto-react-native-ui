@@ -211,10 +211,10 @@ function Markers({ responseData, onSelect }) {
         borderRadius: 20,
         padding: 10,
       },
-      
       mapTypeButtonText: {
         color: 'white',
         fontSize: 18,
+        //nothing for commit 
       },
       backButton: {
         backgroundColor: "#4ECCA3",
