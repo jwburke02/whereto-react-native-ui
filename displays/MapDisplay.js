@@ -29,6 +29,7 @@ function MarkerInfoModal({ visible, onClose, info }) {
           <Text style={styles.modalText1}>Address: {info.address}</Text>
           <Text style={styles.modalText1}>Detection: {info.class_name}</Text>
           <Text style={styles.modalText1}>Confidence: {info.conf.toFixed(2)}</Text>
+          {info.text_read != null ? <Text style={styles.modalText1}>Sign Text: {"\n" + info.text_read}</Text> : null}
           <TouchableOpacity style={[styles.button, styles.buttonClose]} onPress={onClose}>
             <Text style={styles.textStyle}>Close</Text>
           </TouchableOpacity>
