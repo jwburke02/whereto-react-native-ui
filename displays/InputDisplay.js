@@ -4,6 +4,9 @@ import mock_response from '../response.json'; // Assuming the mock_response is s
 import axios from 'axios';
 import * as Location from 'expo-location';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import RNPickerSelect from 'react-native-picker-select';
+import {Picker} from '@react-native-picker/picker';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyBg-pe_LHT7KSDfsddZCZcCzKggF8fHV5g';
@@ -40,10 +43,21 @@ function HelpModal({ isVisible, onClose }) {
 // API call to find the parking
 function InputDisplay({ setIsOnMap, setResponseData }) {
   const [radius, setRadius] = React.useState('');
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    //{label: '30 meters', value: '30'},
+    {label: '50 meters', value: '50'},
+    {label: '100 meters', value: '100'},
+    {label: '150 meters', value: '150'},
+  ]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isError, setIsError] = React.useState(false);
   const [isHelpModalVisible, setIsHelpModalVisible] = React.useState(false);
   const [address, setAddress] = useState('');
+  const [isAddressInputFocused, setIsAddressInputFocused] = useState(false);
+  const [addressSelected, setAddressSelected] = useState(false);
+  const [isAutocompleteFocused, setIsAutocompleteFocused] = useState(false);
+
 
 
   const googlePlacesAutocompleteRef = useRef(null);
@@ -97,12 +111,17 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
           <ActivityIndicator size="large" color="#4ECCA3" />
         ) : (
           <>
+          
             <GooglePlacesAutocomplete
+          onFocus={() => setIsAddressInputFocused(true)}
+          onBlur={() => setIsAddressInputFocused(false)}
           placeholder="Enter Address"
           ref={googlePlacesAutocompleteRef}
           onPress={(data, details = null) => {
             // Use this address to find parking when the button is pressed
             setAddress(data.description);
+            setIsAutocompleteFocused(false);
+            setAddressSelected(true);
           }}
           query={{
             key: GOOGLE_PLACES_API_KEY,
@@ -118,14 +137,33 @@ function InputDisplay({ setIsOnMap, setResponseData }) {
             placeholderTextColor: '#6c757d', // Your desired placeholder text color
           }}
         />
-            <TextInput
-              onChangeText={text => setRadius(text.replace(/[^0-9]/g, ''))}
-              value={radius}
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder="Radius in meters (25-200)"
-              placeholderTextColor="#6c757d"
-            />
+            <DropDownPicker
+                open={open}
+                value={radius}
+                items={items}
+                setOpen={setOpen}
+                setValue={setRadius}
+                setItems={setItems}
+                zIndex={3000} // Ensure dropdown is above other elements
+                zIndexInverse={1000} // Lower zIndex for the list part to manage its overlay behavior
+                style={styles.input1} // Applying the custom style
+                containerStyle={{
+                  width: '100%',
+                  marginLeft: 1,
+                  zIndex: -1, // You might need to adjust this depending on your layout
+                }}
+                dropDownContainerStyle={{
+                  width: '90%',
+                  marginLeft: 20,
+                  borderRadius: 25,
+                  zIndex: -1, // Adjust if necessary
+                }}
+                placeholder="Select Radius" // Custom placeholder text
+                placeholderStyle={{
+                  color: "#6b6a6a", // Change the placeholder text color to tomato red
+                  fontSize: 16, // Change the placeholder text size
+                }}
+              />
             <Pressable onPress={() => findParking(address, radius, setIsLoading, setIsOnMap, setResponseData, setIsError)} style={styles.buttonuser2}>
               <Text style={styles.buttonText1}>Find Parking</Text>
             </Pressable>
@@ -181,6 +219,19 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 20,
     fontSize: 16,
+    //zIndex: -1000,
+    color: '#333333',
+    marginVertical: 10,
+    opacity: 0.9,
+  },
+  input1: {
+    width: '90%',
+    height: 50,
+    marginLeft: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    fontSize: 16,
     zIndex: -1000,
     color: '#333333',
     marginVertical: 10,
@@ -190,6 +241,7 @@ const styles = StyleSheet.create({
     width: '90%', // Ensure the container is wide enough
     backgroundColor: 'transparent',
     zIndex: 5,
+    color: '#333333',
     borderTopWidth: 0,
     borderBottomWidth: 0,
   },
@@ -198,6 +250,7 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: '#f8f9fa',
     borderRadius: 25,
+    zIndex: 1000,
     paddingHorizontal: 20,
     fontSize: 16,
     color: '#333333',
@@ -209,9 +262,9 @@ const styles = StyleSheet.create({
     top:65, // Adjust this value based on your layout
     width: '90%',
     borderRadius: 25,
-    zIndex: 1000, // Ensure this is very high to bring in front
+    zIndex: 100, // Ensure this is very high to bring in front
     backgroundColor: 'white',
-    elevation: 3, // For Android to ensure the shadow and elevation
+    elevation: 7, // For Android to ensure the shadow and elevation
   },
   button: {
     width: '90%',

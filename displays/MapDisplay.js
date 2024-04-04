@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Modal, Button, TouchableOpacity, Image, Dimensi
 import MapView, { Circle, Marker } from 'react-native-maps';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import roadSignIcon from '../assets/parkingsign.png';
+import parkingMeterIcon from '../assets/parkingmeter.png';
 
 const { width, height } = Dimensions.get('window');
 
@@ -64,19 +66,36 @@ function HelpModal({ isVisible, onClose }) {
 }
 
 // Component for rendering all markers on the map based on responseData
+const CustomMarker = ({params, onSelect, iconSource}) => (
+  <Marker
+    coordinate={{ latitude: params.lat, longitude: params.lng }}
+    title={params.class_name}
+    description={`Confidence: ${params.conf.toFixed(2)}`}
+    onPress={() => onSelect(params.did, params.lat, params.lng)}
+  >
+    {/* Custom View for Marker with adjusted size */}
+    <Image source={iconSource} style={{width: 30, height: 30}} resizeMode="contain" />
+  </Marker>
+);
+
+// Modified Markers function to use CustomMarker with resized images
 function Markers({ responseData, onSelect }) {
-    return Object.keys(responseData).filter(key => key !== 'center_lat' && key !== 'center_lng' && key !== 'radius')
-      .flatMap(key => responseData[key].detections)
-      .map((params, index) => (
-        <Marker
-          key={index}
-          coordinate={{ latitude: params.lat, longitude: params.lng }}
-          title={params.class_name}
-          description={`Confidence: ${params.conf.toFixed(2)}`}
-          onPress={(event) => onSelect(params.did, params.lat, params.lng)}
+  return Object.keys(responseData)
+    .filter(key => key !== 'center_lat' && key !== 'center_lng' && key !== 'radius')
+    .flatMap(key => responseData[key].detections)
+    .map((params, index) => {
+      const iconSource = params.class_name.includes("Road Sign") ? roadSignIcon : parkingMeterIcon;
+
+      return (
+        <CustomMarker 
+          key={index} 
+          params={params} 
+          onSelect={onSelect} 
+          iconSource={iconSource}
         />
-      ));
-  }
+      );
+    });
+}
   
   function MapDisplay({ responseData, setIsOnMap }) {
     const [modalVisible, setModalVisible] = useState(false);
